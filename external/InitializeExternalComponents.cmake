@@ -15,6 +15,7 @@ if(WIN32)
 endif()
 
 find_package(Boost 1.65.1 COMPONENTS thread log log_setup system program_options filesystem coroutine locale regex unit_test_framework serialization)
+
 if(Boost_FOUND)
     message(STATUS "** Boost Include: ${Boost_INCLUDE_DIR}")
     message(STATUS "** Boost Libraries Directory: ${Boost_LIBRARY_DIRS}")
@@ -30,6 +31,7 @@ else()
             GIT_TAG d3951bc7f0b9d09005f92aedcf6acfc595f050ea)
 
         FetchContent_GetProperties(boost_cmake)
+
         if(NOT boost_cmake_POPULATED)
             FetchContent_Populate(boost_cmake)
             add_subdirectory(${boost_cmake_SOURCE_DIR} ${boost_cmake_BINARY_DIR} EXCLUDE_FROM_ALL)
@@ -38,41 +40,61 @@ else()
     endif()
 endif()
 
-
 # cmrc
 FetchContent_Declare(cmrc
     GIT_REPOSITORY https://github.com/vector-of-bool/cmrc.git
     GIT_TAG a64bea50c05594c8e7cf1f08e441bb9507742e2e)
 
 FetchContent_GetProperties(cmrc)
+
 if(NOT cmrc_POPULATED)
     FetchContent_Populate(cmrc)
     add_subdirectory(${cmrc_SOURCE_DIR} ${cmrc_BINARY_DIR} EXCLUDE_FROM_ALL)
 endif()
 
-
 # nlohmann_json
 FetchContent_Declare(json
-  GIT_REPOSITORY https://github.com/ArthurSonzogni/nlohmann_json_cmake_fetchcontent
-  GIT_TAG v3.10.4)
+    GIT_REPOSITORY https://github.com/ArthurSonzogni/nlohmann_json_cmake_fetchcontent
+    GIT_TAG v3.10.4)
 
 FetchContent_GetProperties(json)
-if(NOT json_POPULATED)
-  FetchContent_Populate(json)
-  add_subdirectory(${json_SOURCE_DIR} ${json_BINARY_DIR} EXCLUDE_FROM_ALL)
-endif()
 
+if(NOT json_POPULATED)
+    FetchContent_Populate(json)
+    add_subdirectory(${json_SOURCE_DIR} ${json_BINARY_DIR} EXCLUDE_FROM_ALL)
+endif()
 
 # mime_js
 FetchContent_Declare(mime_js
-  GIT_REPOSITORY https://github.com/broofa/mime.git
-  GIT_TAG main)
+    GIT_REPOSITORY https://github.com/broofa/mime.git
+    GIT_TAG main)
 
 FetchContent_GetProperties(mime_js)
+
 if(NOT mime_js_POPULATED)
-  FetchContent_Populate(mime_js)
-  cmrc_add_resource_library(mime-types-lib-resources
-    NAMESPACE mime_types::data::rc
-    WHENCE ${mime_js_SOURCE_DIR}
-    "${mime_js_SOURCE_DIR}/types/standard.js" "${mime_js_SOURCE_DIR}/types/other.js")
+    FetchContent_Populate(mime_js)
+
+    file(GLOB_RECURSE mime_js_types
+        ${mime_js_SOURCE_DIR}/types/*.js
+    )
+
+    find_program(NODE_EXECUTABLE NAMES node REQUIRED)
+
+    foreach(mime_js_type ${mime_js_types})
+        get_filename_component(mime_js_type_name ${mime_js_type} NAME_WLE)
+
+        execute_process(
+            COMMAND "${NODE_EXECUTABLE}" -e "console.log(JSON.stringify(require('./${mime_js_type_name}.js')))"
+            WORKING_DIRECTORY "${mime_js_SOURCE_DIR}/types/"
+            OUTPUT_VARIABLE NODE_EXECUTE_RESULT
+            COMMAND_ERROR_IS_FATAL ANY
+        )
+
+        file(WRITE "${mime_js_SOURCE_DIR}/types/${mime_js_type_name}.json" "${NODE_EXECUTE_RESULT}")
+    endforeach()
+
+    cmrc_add_resource_library(mime-types-lib-resources
+        NAMESPACE mime_types::data::rc
+        WHENCE ${mime_js_SOURCE_DIR}
+        "${mime_js_SOURCE_DIR}/types/standard.json" "${mime_js_SOURCE_DIR}/types/other.json")
 endif()

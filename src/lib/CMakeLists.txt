@@ -40,6 +40,10 @@ if(Boost_FOUND)
     target_compile_definitions(mime-types-lib PUBLIC "MIME_TYPES_USE_BOOST")
 endif()
 
+if(CMAKE_COMPILER_IS_GNUCC AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS_EQUAL 7.0)
+    target_link_libraries(mime-types-lib PRIVATE stdc++fs)
+endif()
+
 # =================================================================
 add_library(mime-types-lib-header-only INTERFACE)
 add_library(mime_types::mime_types_header_only ALIAS mime-types-lib-header-only)

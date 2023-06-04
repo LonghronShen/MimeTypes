@@ -18,15 +18,14 @@ load_from(const std::string &resource_name) {
   const auto &fs = cmrc::mime_types::data::rc::get_filesystem();
   const auto &file = fs.open(resource_name);
   std::string js(file.begin(), file.end());
-  js = js.substr(17, js.length() - 18);
 
   const auto &json = json::parse(js);
   return json.get<resource_loader::resource_map_type>();
 }
 
 resource_loader::resource_map_type resource_loader::load() const {
-  auto standard = load_from("types/standard.js");
-  const auto &other = load_from("types/other.js");
+  auto standard = load_from("types/standard.json");
+  const auto &other = load_from("types/other.json");
   standard.insert(other.begin(), other.end());
   return standard;
 }
