@@ -67,7 +67,7 @@ endif()
 # mime_js
 FetchContent_Declare(mime_js
     GIT_REPOSITORY https://github.com/broofa/mime.git
-    GIT_TAG main)
+    GIT_TAG ef6ebd0c8e0c412f21389d8fee642cfceca2b975)
 
 FetchContent_GetProperties(mime_js)
 
