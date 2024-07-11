@@ -47,7 +47,11 @@ namespace filesystem {
 
 std::string inline get_extension_from_path(const std::string &path) {
 #ifdef MIME_TYPES_USE_BOOST
+#if BOOST_FILESYSTEM_VERSION >= 3
+  return boost::filesystem::path(path).extension().string();
+#else
   return boost::filesystem::extension(path);
+#endif
 #else
   std::filesystem::path filePath = path;
   return filePath.extension().generic_u8string();
